@@ -2,7 +2,7 @@
 
 A working n8n prototype automating the enquiry intake stage of a print job pipeline: from a free-text customer request through to a structured, priced-and-ready order, with AI-based extraction and automatic branching depending on whether the enquiry has enough information to quote.
 
-Built as a proof of concept for a KTP Associate application focused on workflow automation and applied AI in business processes.
+Built as a proof of concept focused on workflow automation and applied AI in business processes.
 
 ## What's in this repo
 

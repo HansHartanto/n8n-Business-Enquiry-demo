@@ -6,9 +6,9 @@ Built as a proof of concept focused on workflow automation and applied AI in bus
 
 ## What's in this repo
 
-- `enquiry-workflow.json` — the n8n workflow itself, exportable and importable
-- `workflow-canvas.png` — a screenshot of the full workflow canvas
-- `print_workflow_template.xlsx` — the Orders database template, including a process map covering the full enquiry-to-production-scheduling journey (see its Read me tab)
+- `enquiry-workflow.json` : the n8n workflow itself, exportable and importable
+- `workflow-canvas.png` : a screenshot of the full workflow canvas
+- `print_workflow_template.xlsx` : the Orders database template, including a process map covering the full enquiry-to-production-scheduling journey (see its Read me tab)
 
 ## The business problem
 
@@ -21,7 +21,7 @@ Print job enquiries usually arrive as unstructured free text, leaving someone to
 3. Reconnect credentials. The export doesn't include secret values, so you'll need to set up your own for:
    - The Chat Model node powering the Information Extractor (this version used Google Gemini's free tier, but any n8n-supported provider works)
    - The Google Sheets nodes (OAuth2, pointed at your own copy of the spreadsheet below)
-   - The Send Email node (SMTP credentials — left unconfigured in this version since it's a demonstration build)
+   - The Send Email node (SMTP credentials, left unconfigured in this version since it's a demonstration build)
 4. Make your own copy of `print_workflow_template.xlsx` in Google Sheets, then update the Google Sheets nodes' Document and Sheet fields to point at your copy, since they're currently linked to mine.
 5. Test using the sample enquiries below, either by running the form's Test URL directly or executing each node manually with **Execute step**.
 

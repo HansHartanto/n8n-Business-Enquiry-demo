@@ -1,4 +1,4 @@
-# Enquiry stage automation — print job workflow
+# Enquiry stage automation for a print job workflow
 
 A working n8n prototype automating the enquiry intake stage of a print job pipeline: from a free-text customer request through to a structured, priced-and-ready order, with AI-based extraction and automatic branching depending on whether the enquiry has enough information to quote.
 
@@ -59,4 +59,7 @@ This covers the Enquiry stage only. The spreadsheet's Read me tab and the accomp
 
 ## Tools used
 
-n8n, Google Sheets, an LLM API for structured extraction, and Python/openpyxl for the spreadsheet template.
+n8n, Google Sheets, and an LLM API for structured extraction (in this case, Gemini free api is used).
+
+
+

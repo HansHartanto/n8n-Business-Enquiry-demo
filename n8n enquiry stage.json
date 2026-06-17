@@ -1,0 +1,874 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Enquiry",
+        "formDescription": "Let us know what you need, We'll get back to you shortly after you have submitted this form.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Enquiry",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Deadline Date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Do you have a ready-print artwork or do you need design assistance?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes, I have an artwork ready"
+                  },
+                  {
+                    "option": "No, I want to get help designing / only asking for a quote."
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ced12e6a-7831-43a8-b5eb-ddf67a9eb051",
+      "name": "On form submission",
+      "webhookId": "cc3a50c3-951a-4778-b697-a58a4d676211"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.Enquiry }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "product_type",
+              "description": "the category of printed product being requested, such as flyers, business cards, postcards, or banners"
+            },
+            {
+              "name": "quantity",
+              "type": "number",
+              "description": "the number of units requested, as a number"
+            },
+            {
+              "name": "finish",
+              "description": "the finish or coating mentioned, such as gloss, matte, or uncoated, if specified"
+            },
+            {
+              "name": "sides",
+              "description": "whether the job is single-sided or double-sided, if mentioned"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e4c92312-f945-4b53-becf-53f756d27ebb",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        208
+      ],
+      "id": "96f46237-7a05-461b-a3a4-489d4e270f1f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xPpss3lBksPcATVg",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const formData = $('On form submission').item.json;\nconst data = $json.output;\nconst required = ['product_type', 'quantity', 'finish', 'sides'];\nconst missing = required.filter(field => !data[field]);\n\nreturn [{\n  json: {\n    order_id: 'ORD-' + Date.now(),\n    name: formData['Name'],\n    email: formData['Email'],\n    deadline: formData['Deadline'],\n    has_artwork: formData['Have artwork already'],\n    raw_text: formData['Please let us know what you need.'],\n    submitted_at: formData['submittedAt'],\n    ...data,\n    is_complete: missing.length === 0,\n    missing_fields: missing\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        0
+      ],
+      "id": "34d65f01-b361-4906-99de-b4bdcba599df",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c9921df9-212f-4325-897d-01fdd8dc8895",
+              "leftValue": "={{ $json.is_complete }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "4c2332bf-e567-42f3-8660-774d36bc3d3a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc",
+          "mode": "list",
+          "cachedResultName": "n8n enquiry database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 198890552,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc/edit#gid=198890552"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer name": "={{ $('On form submission').item.json.Name }}",
+            "Customer email": "={{ $('On form submission').item.json.Email }}",
+            "Enquiry date": "={{ $('On form submission').item.json.submittedAt }}",
+            "Raw enquiry text": "={{ $('On form submission').item.json.Enquiry }}",
+            "Product type": "={{ $json.product_type }}",
+            "Quantity": "={{ $json.quantity }}",
+            "Finish": "={{ $json.finish }}",
+            "Sides": "={{ $json.sides }}",
+            "Has artwork": "={{ $('On form submission').item.json['Do you have a ready-print artwork or do you need design assistance?'] }}",
+            "Deadline": "={{ $('On form submission').item.json['Deadline Date'] }}",
+            "Is complete": "={{ $('Code in JavaScript').item.json.is_complete }}",
+            "Missing fields": "={{ $('Code in JavaScript').item.json.missing_fields }}",
+            "Order ID": "={{ $('Code in JavaScript').item.json.order_id }}",
+            "Status": "Quote Pending"
+          },
+          "matchingColumns": [
+            "Order ID"
+          ],
+          "schema": [
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer name",
+              "displayName": "Customer name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer email",
+              "displayName": "Customer email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enquiry date",
+              "displayName": "Enquiry date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Raw enquiry text",
+              "displayName": "Raw enquiry text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product type",
+              "displayName": "Product type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finish",
+              "displayName": "Finish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sides",
+              "displayName": "Sides",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Deadline",
+              "displayName": "Deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Has artwork",
+              "displayName": "Has artwork",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Is complete",
+              "displayName": "Is complete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing fields",
+              "displayName": "Missing fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote amount (GBP)",
+              "displayName": "Quote amount (GBP)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote sent date",
+              "displayName": "Quote sent date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote accepted date",
+              "displayName": "Quote accepted date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof version",
+              "displayName": "Proof version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof sent date",
+              "displayName": "Proof sent date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof approved date",
+              "displayName": "Proof approved date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof turnaround (days)",
+              "displayName": "Proof turnaround (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Revision rounds",
+              "displayName": "Revision rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled production date",
+              "displayName": "Scheduled production date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Schedule conflict",
+              "displayName": "Schedule conflict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Completed date",
+              "displayName": "Completed date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total cycle time (days)",
+              "displayName": "Total cycle time (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enquiry to quote (days)",
+              "displayName": "Enquiry to quote (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        -96
+      ],
+      "id": "f48cb431-65a5-4051-86f5-43a16916a9b2",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YtSXYDTWLsSzeYE0",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc",
+          "mode": "list",
+          "cachedResultName": "n8n enquiry database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 198890552,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jl91Mf3yHLZ64Sed25vhrMMUumSKko9M3WzPkeOXEdc/edit#gid=198890552"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order ID": "={{ $('Code in JavaScript').item.json.order_id }}",
+            "Customer name": "={{ $('Code in JavaScript').item.json.name }}",
+            "Customer email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Enquiry date": "={{ $('Code in JavaScript').item.json.submitted_at }}",
+            "Raw enquiry text": "={{ $('On form submission').item.json.Enquiry }}",
+            "Product type": "={{ $('Information Extractor').item.json.output.product_type }}",
+            "Quantity": "={{ $('Information Extractor').item.json.output.quantity }}",
+            "Finish": "={{ $('Information Extractor').item.json.output.finish }}",
+            "Sides": "={{ $('Information Extractor').item.json.output.sides }}",
+            "Deadline": "={{ $('On form submission').item.json['Deadline Date'] }}",
+            "Has artwork": "={{ $('On form submission').item.json['Do you have a ready-print artwork or do you need design assistance?'] }}",
+            "Is complete": "={{ $('Code in JavaScript').item.json.is_complete }}",
+            "Missing fields": "={{ $('Code in JavaScript').item.json.missing_fields }}",
+            "Status": "Awaiting Info"
+          },
+          "matchingColumns": [
+            "Order ID"
+          ],
+          "schema": [
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer name",
+              "displayName": "Customer name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer email",
+              "displayName": "Customer email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enquiry date",
+              "displayName": "Enquiry date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Raw enquiry text",
+              "displayName": "Raw enquiry text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product type",
+              "displayName": "Product type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finish",
+              "displayName": "Finish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sides",
+              "displayName": "Sides",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Deadline",
+              "displayName": "Deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Has artwork",
+              "displayName": "Has artwork",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Is complete",
+              "displayName": "Is complete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing fields",
+              "displayName": "Missing fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote amount (GBP)",
+              "displayName": "Quote amount (GBP)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote sent date",
+              "displayName": "Quote sent date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quote accepted date",
+              "displayName": "Quote accepted date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof version",
+              "displayName": "Proof version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof sent date",
+              "displayName": "Proof sent date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof approved date",
+              "displayName": "Proof approved date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proof turnaround (days)",
+              "displayName": "Proof turnaround (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Revision rounds",
+              "displayName": "Revision rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled production date",
+              "displayName": "Scheduled production date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Schedule conflict",
+              "displayName": "Schedule conflict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Completed date",
+              "displayName": "Completed date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total cycle time (days)",
+              "displayName": "Total cycle time (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enquiry to quote (days)",
+              "displayName": "Enquiry to quote (days)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        112
+      ],
+      "id": "f493655e-bfc0-488f-aa47-8e338ee9c0ec",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YtSXYDTWLsSzeYE0",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ \"Quick question about your enquiry — \" + $json.order_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1056,
+        112
+      ],
+      "id": "934c5636-f217-4d99-aeb2-022441aff5b0",
+      "name": "Send an Email",
+      "webhookId": "9d84e20b-d510-4e64-a333-27a7c99eb298"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b3293721-891f-4bd3-8b0f-a78ecce28c8c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d35f269aa94de4efe4e852f6e47182941c4e3185d03a6339909186e4a44c7745"
+  },
+  "nodeGroups": [],
+  "id": "ZMEVuQn7SeaHxxvW",
+  "tags": []
+}
